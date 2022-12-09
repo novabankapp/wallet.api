@@ -3,18 +3,18 @@ package server
 import (
 	"context"
 	"fmt"
+	kafkaClient "github.com/novabankapp/common.infrastructure/kafka"
+	"github.com/novabankapp/common.infrastructure/logger"
+	"github.com/novabankapp/wallet.api/config"
+	readerKafka "github.com/novabankapp/wallet.api/infrastructure/kafka"
+	walletServices "github.com/novabankapp/wallet.application/services"
+	"github.com/pkg/errors"
+	"github.com/segmentio/kafka-go"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
-
-	kafkaClient "github.com/novabankapp/common.infrastructure/kafka"
-	"github.com/novabankapp/common.infrastructure/logger"
-	"github.com/novabankapp/wallet.api/config"
-	readerKafka "github.com/novabankapp/wallet.api/infrastructure/kafka"
-	"github.com/pkg/errors"
-	"github.com/segmentio/kafka-go"
 )
 
 type App interface {
@@ -22,16 +22,18 @@ type App interface {
 }
 
 type app struct {
-	httpServer *http.Server
-	log        logger.Logger
-	cfg        *config.Config
+	httpServer    *http.Server
+	log           logger.Logger
+	cfg           *config.Config
+	walletService walletServices.WalletService
 }
 
-func NewApp(server *http.Server, log logger.Logger, config *config.Config) App {
+func NewApp(server *http.Server, log logger.Logger, config *config.Config, walletService walletServices.WalletService) App {
 	return &app{
 		server,
 		log,
 		config,
+		walletService,
 	}
 }
 
@@ -51,7 +53,7 @@ func (a *app) Run(ctx context.Context) error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, os.Interrupt)
 
-	readerMessageProcessor := readerKafka.NewReaderMessageProcessor(a.log, a.cfg)
+	readerMessageProcessor := readerKafka.NewReaderMessageProcessor(a.log, a.cfg, a.walletService)
 	a.log.Info("Starting Reader Kafka consumers")
 	cg := kafkaClient.NewConsumerGroup(a.cfg.Kafka.Brokers, a.cfg.Kafka.GroupID, a.log)
 	go cg.ConsumeTopic(ctx, a.getConsumerGroupTopics(), readerKafka.PoolSize, readerMessageProcessor.ProcessMessages)

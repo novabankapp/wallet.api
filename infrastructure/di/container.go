@@ -154,8 +154,8 @@ func BuildContainer() *dig.Container {
 	if serverErr != nil {
 		return nil
 	}
-	appErr := container.Provide(func(httpServer *http.Server, log logger.Logger, config *localConfig.Config) server.App {
-		return server.NewApp(httpServer, log, config)
+	appErr := container.Provide(func(httpServer *http.Server, log logger.Logger, config *localConfig.Config, walletService walletServices.WalletService) server.App {
+		return server.NewApp(httpServer, log, config, walletService)
 	})
 	if appErr != nil {
 		return nil

@@ -2,11 +2,11 @@ package kafka
 
 import (
 	"context"
-	"sync"
-
 	"github.com/novabankapp/common.infrastructure/logger"
 	"github.com/novabankapp/wallet.api/config"
+	walletServices "github.com/novabankapp/wallet.application/services"
 	"github.com/segmentio/kafka-go"
+	"sync"
 )
 
 const (
@@ -14,12 +14,13 @@ const (
 )
 
 type readerMessageProcessor struct {
-	log logger.Logger
-	cfg *config.Config
+	log           logger.Logger
+	cfg           *config.Config
+	walletService walletServices.WalletService
 }
 
 func NewReaderMessageProcessor(log logger.Logger,
-	cfg *config.Config) *readerMessageProcessor {
+	cfg *config.Config, service walletServices.WalletService) *readerMessageProcessor {
 	return &readerMessageProcessor{log: log, cfg: cfg}
 }
 
@@ -44,11 +45,9 @@ func (p *readerMessageProcessor) ProcessMessages(ctx context.Context, r *kafka.R
 		switch m.Topic {
 		case p.cfg.Kafka.KafkaTopics.UserCreated.TopicName:
 			p.processUserCreated(ctx, r, m)
+		case p.cfg.Kafka.KafkaTopics.AccountCreated.TopicName:
+			p.processUserAccountCreated(ctx, r, m)
 
 		}
 	}
-}
-
-func (p *readerMessageProcessor) logProcessMessage(m kafka.Message, workerID int) {
-	p.log.KafkaProcessMessage(m.Topic, m.Partition, string(m.Value), workerID, m.Offset, m.Time)
 }
