@@ -5,8 +5,11 @@ import (
 	"github.com/novabankapp/common.application/utilities/cryptography"
 	"github.com/novabankapp/wallet.api/functions/common/resources"
 	walletResources "github.com/novabankapp/wallet.api/functions/wallets/resources"
+	walletCommands "github.com/novabankapp/wallet.application/commands"
 	walletQueries "github.com/novabankapp/wallet.application/queries"
 	walletServices "github.com/novabankapp/wallet.application/services"
+	uuid "github.com/satori/go.uuid"
+	"github.com/shopspring/decimal"
 )
 
 type WalletController interface {
@@ -84,4 +87,86 @@ func (w *walletController) GetWalletsByUserId(ctx context.Context, userId string
 		PageSize: pageSize,
 		Wallets:  wallets,
 	}, nil
+}
+func (w *walletController) CreateWallet(ctx context.Context, req walletResources.CreateWalletRequest) {
+
+	id := uuid.NewV4().String()
+	walletId := uuid.NewV4().String()
+	var amount decimal.Decimal
+	if req.Amount != nil {
+		amount = *req.Amount
+	} else {
+		amount = decimal.NewFromFloat(0.00)
+	}
+	command := walletCommands.NewCreateWalletCommand(id,
+		amount, req.Description, req.UserId, req.AccountId, walletId)
+	err := w.service.Commands.CreateWallet.Handle(ctx, command)
+	if err != nil {
+		return
+	}
+}
+func (w *walletController) BlockWallet(ctx context.Context, req walletResources.BlockWalletRequest) (bool, error) {
+	id := uuid.NewV4().String()
+	command := walletCommands.NewBlockWalletCommand(id, req.WalletId, req.Description)
+	err := w.service.Commands.BlockWalletCommand.Handle(ctx, command)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+func (w *walletController) UnblockWallet(ctx context.Context, req walletResources.UnblockWalletRequest) (bool, error) {
+	id := uuid.NewV4().String()
+	command := walletCommands.NewUnblockWalletCommand(id, req.WalletId, req.Description)
+	err := w.service.Commands.UnblockWalletCommand.Handle(ctx, command)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+func (w *walletController) DeleteWallet(ctx context.Context, req walletResources.DeleteWalletRequest) (bool, error) {
+	id := uuid.NewV4().String()
+	command := walletCommands.NewDeleteWalletCommand(id, req.WalletId, req.Description)
+	err := w.service.Commands.DeleteWalletCommand.Handle(ctx, command)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (w *walletController) LockWallet(ctx context.Context, req walletResources.LockWalletRequest) (bool, error) {
+	id := uuid.NewV4().String()
+	command := walletCommands.NewLockWalletCommand(id, req.WalletId, req.Description)
+	err := w.service.Commands.LockWalletCommand.Handle(ctx, command)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+func (w *walletController) UnlockWallet(ctx context.Context, req walletResources.UnlockWalletRequest) (bool, error) {
+	id := uuid.NewV4().String()
+	command := walletCommands.NewUnlockWalletCommand(id, req.WalletId, req.Description)
+	err := w.service.Commands.UnlockWalletCommand.Handle(ctx, command)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (w *walletController) DebitWallet(ctx context.Context, req walletResources.DebitAccountRequest) (bool, error) {
+
+	command := walletCommands.NewDebitWalletCommand(req.DebitWalletID, req.CreditWalletID, req.Amount, req.Description)
+	err := w.service.Commands.DebitWalletCommand.Handle(ctx, command)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+func (w *walletController) CreditWallet(ctx context.Context, req walletResources.CreditAccountRequest) (bool, error) {
+
+	command := walletCommands.NewCreditWalletCommand(req.CreditWalletID, req.DebitWalletID, req.Amount, req.Description)
+	err := w.service.Commands.CreditWalletCommand.Handle(ctx, command)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
