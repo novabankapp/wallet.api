@@ -6,6 +6,7 @@ import (
 	"github.com/novabankapp/common.application/services/message_queue"
 	es "github.com/novabankapp/common.data/eventstore"
 	store "github.com/novabankapp/common.data/eventstore/store"
+	baseRepository "github.com/novabankapp/common.data/repositories/base/cassandra"
 	"github.com/novabankapp/common.infrastructure/eventstoredb"
 	"github.com/novabankapp/common.infrastructure/kafka"
 	kafkaClient "github.com/novabankapp/common.infrastructure/kafka"
@@ -16,6 +17,8 @@ import (
 	allControllers "github.com/novabankapp/wallet.api/controllers"
 	"github.com/novabankapp/wallet.api/middlewares"
 	"github.com/novabankapp/wallet.api/server"
+	walletServices "github.com/novabankapp/wallet.application/services"
+	noSqlEntities "github.com/novabankapp/wallet.data/es/models"
 	"github.com/novabankapp/wallet.data/migrations"
 	"github.com/scylladb/gocqlx/v2"
 	"go.uber.org/dig"
@@ -124,6 +127,15 @@ func BuildContainer() *dig.Container {
 	container.Provide(func(config *localConfig.Config) email.MailService {
 		//return email.NewSmtpService(config.SMTP)
 		return email.NewMockMailService()
+	})
+
+	container.Provide(func(
+		logger logger.Logger,
+		config *localConfig.Config,
+		session *gocqlx.Session,
+		aggregateStore es.AggregateStore) *walletServices.WalletService {
+		walletProjectionRepo := baseRepository.NewCassandraRepository[noSqlEntities.WalletProjection](session, "", config.Cassandra.Timeout)
+		return walletServices.NewWalletService(logger, aggregateStore, walletProjectionRepo)
 	})
 
 	newControllerErr := container.Provide(allControllers.NewControllers)
