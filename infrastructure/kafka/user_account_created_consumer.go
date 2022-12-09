@@ -12,7 +12,7 @@ import (
 )
 
 func (s *readerMessageProcessor) processUserAccountCreated(ctx context.Context, r *kafka.Reader, m kafka.Message) {
-	ctx, span := tracing.StartKafkaConsumerTracerSpan(ctx, m.Headers, "readerMessageProcessor.processProductDeleted")
+	ctx, span := tracing.StartKafkaConsumerTracerSpan(ctx, m.Headers, "readerMessageProcessor.processUserAccountCreated")
 	defer span.Finish()
 
 	msg := messages.UserAccountCreatedMessage{}

@@ -133,9 +133,12 @@ func BuildContainer() *dig.Container {
 		logger logger.Logger,
 		config *localConfig.Config,
 		session *gocqlx.Session,
-		aggregateStore es.AggregateStore) *walletServices.WalletService {
+		aggregateStore es.AggregateStore,
+		topics *kafka.KafkaTopics,
+		messageQueue message_queue.MessageQueue,
+	) *walletServices.WalletService {
 		walletProjectionRepo := baseRepository.NewCassandraRepository[noSqlEntities.WalletProjection](session, "", config.Cassandra.Timeout)
-		return walletServices.NewWalletService(logger, aggregateStore, walletProjectionRepo)
+		return walletServices.NewWalletService(logger, aggregateStore, walletProjectionRepo, topics, messageQueue)
 	})
 
 	newControllerErr := container.Provide(allControllers.NewControllers)

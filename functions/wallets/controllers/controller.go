@@ -124,8 +124,8 @@ func (w *walletController) UnblockWallet(ctx context.Context, req walletResource
 	return true, nil
 }
 func (w *walletController) DeleteWallet(ctx context.Context, req walletResources.DeleteWalletRequest) (bool, error) {
-	id := uuid.NewV4().String()
-	command := walletCommands.NewDeleteWalletCommand(id, req.WalletId, req.Description)
+	///id := uuid.NewV4().String()
+	command := walletCommands.NewDeleteWalletCommand(req.WalletId, req.WalletId, req.Description)
 	err := w.service.Commands.DeleteWalletCommand.Handle(ctx, command)
 	if err != nil {
 		return false, err
