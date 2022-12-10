@@ -14,8 +14,12 @@ import (
 	"github.com/novabankapp/common.infrastructure/logger"
 	"github.com/novabankapp/common.notifier/email"
 	"github.com/novabankapp/common.notifier/sms"
+	paymentServices "github.com/novabankapp/payment.application/services"
+	integrationServices "github.com/novabankapp/payment.application/services/integrations"
 	localConfig "github.com/novabankapp/wallet.api/config"
 	allControllers "github.com/novabankapp/wallet.api/controllers"
+	paymentControllers "github.com/novabankapp/wallet.api/functions/payments/controllers"
+	paymentServicesLocal "github.com/novabankapp/wallet.api/functions/payments/services"
 	walletControllers "github.com/novabankapp/wallet.api/functions/wallets/controllers"
 	walletServicesLocal "github.com/novabankapp/wallet.api/functions/wallets/services"
 	"github.com/novabankapp/wallet.api/middlewares"
@@ -150,8 +154,24 @@ func BuildContainer() *dig.Container {
 		return walletServicesLocal.NewWalletService(walletService, cryptography)
 	})
 
+	container.Provide(func() integrationServices.MoneyService {
+		return integrationServices.NewMoneyService()
+	})
+
+	container.Provide(func(walletService walletServices.WalletService, moneyService integrationServices.MoneyService) paymentServices.MoneyTransferService {
+		return paymentServices.NewMoneyTransferService(walletService, moneyService)
+	})
+
+	container.Provide(func(moneyTransferService paymentServices.MoneyTransferService) paymentServicesLocal.MoneyTransferService {
+		return paymentServicesLocal.NewMoneyTransferService(moneyTransferService)
+	})
+	//controllers
 	container.Provide(func(walletService walletServicesLocal.WalletService) walletControllers.WalletController {
 		return walletControllers.NewWalletController(walletService)
+	})
+
+	container.Provide(func(moneyTransferService paymentServicesLocal.MoneyTransferService) paymentControllers.PaymentController {
+		return paymentControllers.NewPaymentController(moneyTransferService)
 	})
 
 	newControllerErr := container.Provide(allControllers.NewControllers)
