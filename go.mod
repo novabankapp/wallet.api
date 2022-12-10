@@ -62,7 +62,14 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	github.com/novabankapp/payment.data v1.0.0
+	github.com/novabankapp/payment.application v1.0.0
 )
+
+
+replace github.com/novabankapp/payment.data v1.0.0 => C:\Projects\golang\github.com\novabankapp\payment.data
+
+replace github.com/novabankapp/payment.application v1.0.0 => C:\Projects\golang\github.com\novabankapp\payment.application
 
 replace github.com/novabankapp/common.notifier v1.0.0 => C:\Projects\golang\github.com\novabankapp\common.notifier
 

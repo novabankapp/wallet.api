@@ -1,0 +1,62 @@
+serviceName: usermanagementapi
+api:
+  port: 5001
+  development: true
+  address: localhost
+eventStoreConfig:
+  connectionString: "esdb://localhost:2113?tls=false"
+logger:
+  level: debug
+  devMode: false
+  encoder: json
+cassandra:
+  user: cassandra
+  password: cassandra
+  addresses: ["localhost"]
+  keyspace: novabankapp
+  protoVersion: 4
+  timeout: 90000
+  replicationFactor: 1
+postgres:
+  host: localhost
+  port: 5432
+  user: novabank
+  password: novabank
+  database: users
+  sslMode: disable
+  timezone: UTC
+jwtToken:
+  secretkey:
+  issuer:
+  expireInHours: 48
+kafka:
+  brokers: [ "localhost:9092" ]
+  groupID: usermanagementapi
+  initTopics: true
+  kafkaTopics:
+    userCreated:
+      topicName: user_created
+      partitions: 10
+      replicationFactor: 1
+    userUpdated:
+      topicName: user_updated
+      partitions: 10
+      replicationFactor: 1
+    userDeleted:
+      topicName: user_deleted
+      partitions: 10
+      replicationFactor: 1
+    userLocked:
+      topicName: user_locked
+      partitions: 10
+      replicationFactor: 1
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+  poolSize: 300
+
+
+serviceSettings:
+  redisProductPrefixKey: "reader:user"

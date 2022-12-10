@@ -47,6 +47,8 @@ func (p *readerMessageProcessor) ProcessMessages(ctx context.Context, r *kafka.R
 			p.processUserCreated(ctx, r, m)
 		case p.cfg.Kafka.KafkaTopics.AccountCreated.TopicName:
 			p.processUserAccountCreated(ctx, r, m)
+		case p.cfg.Kafka.KafkaTopics.UserDeleted.TopicName:
+			p.processUserDeleted(ctx, r, m)
 
 		}
 	}
