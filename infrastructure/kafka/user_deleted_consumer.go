@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/novabankapp/common.infrastructure/tracing"
+	"github.com/novabankapp/wallet.api/functions/common/resources"
+	walletResources "github.com/novabankapp/wallet.api/functions/wallets/resources"
 	"github.com/novabankapp/wallet.api/infrastructure/kafka/messages"
-	walletCommands "github.com/novabankapp/wallet.application/commands"
-	walletQueries "github.com/novabankapp/wallet.application/queries"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -19,15 +19,18 @@ func (s *readerMessageProcessor) processUserDeleted(ctx context.Context, r *kafk
 		s.commitErrMessage(ctx, r, m)
 		return
 	}
-	results, _, err := s.walletService.Queries.GetUserWalletsByID.Handle(ctx, &walletQueries.GetUserWalletsByIDQuery{
-		UserID: msg.UserId,
-	}, 1, []byte(""))
+	results, err := s.walletService.GetWalletsByUserId(ctx, msg.UserId, resources.PaginationData{
+		PageSize:   nil,
+		PageCursor: nil,
+	})
 	if err != nil {
 		s.commitErrMessage(ctx, r, m)
 		return
 	}
-	for _, v := range *results {
-		command := walletCommands.NewDeleteWalletCommand(v.WalletID, v.WalletID, "")
-		s.walletService.Commands.DeleteWalletCommand.Handle(ctx, command)
+	for _, v := range results.Wallets {
+		s.walletService.DeleteWallet(ctx, walletResources.DeleteWalletRequest{
+			WalletId: v.WalletID,
+		})
+
 	}
 }

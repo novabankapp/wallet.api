@@ -6,8 +6,8 @@ import (
 	kafkaClient "github.com/novabankapp/common.infrastructure/kafka"
 	"github.com/novabankapp/common.infrastructure/logger"
 	"github.com/novabankapp/wallet.api/config"
+	walletServicesLocal "github.com/novabankapp/wallet.api/functions/wallets/services"
 	readerKafka "github.com/novabankapp/wallet.api/infrastructure/kafka"
-	walletServices "github.com/novabankapp/wallet.application/services"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
 	"log"
@@ -25,10 +25,10 @@ type app struct {
 	httpServer    *http.Server
 	log           logger.Logger
 	cfg           *config.Config
-	walletService walletServices.WalletService
+	walletService walletServicesLocal.WalletService
 }
 
-func NewApp(server *http.Server, log logger.Logger, config *config.Config, walletService walletServices.WalletService) App {
+func NewApp(server *http.Server, log logger.Logger, config *config.Config, walletService walletServicesLocal.WalletService) App {
 	return &app{
 		server,
 		log,

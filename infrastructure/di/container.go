@@ -4,6 +4,7 @@ import (
 	"github.com/EventStore/EventStore-Client-Go/esdb"
 	"github.com/gocql/gocql"
 	"github.com/novabankapp/common.application/services/message_queue"
+	"github.com/novabankapp/common.application/utilities/cryptography"
 	es "github.com/novabankapp/common.data/eventstore"
 	store "github.com/novabankapp/common.data/eventstore/store"
 	baseRepository "github.com/novabankapp/common.data/repositories/base/cassandra"
@@ -15,6 +16,8 @@ import (
 	"github.com/novabankapp/common.notifier/sms"
 	localConfig "github.com/novabankapp/wallet.api/config"
 	allControllers "github.com/novabankapp/wallet.api/controllers"
+	walletControllers "github.com/novabankapp/wallet.api/functions/wallets/controllers"
+	walletServicesLocal "github.com/novabankapp/wallet.api/functions/wallets/services"
 	"github.com/novabankapp/wallet.api/middlewares"
 	"github.com/novabankapp/wallet.api/server"
 	walletServices "github.com/novabankapp/wallet.application/services"
@@ -140,6 +143,16 @@ func BuildContainer() *dig.Container {
 		walletProjectionRepo := baseRepository.NewCassandraRepository[noSqlEntities.WalletProjection](session, "", config.Cassandra.Timeout)
 		return walletServices.NewWalletService(logger, aggregateStore, walletProjectionRepo, topics, messageQueue)
 	})
+	container.Provide(func() cryptography.Cryptography {
+		return cryptography.New("novabank")
+	})
+	container.Provide(func(walletService walletServices.WalletService, cryptography cryptography.Cryptography) walletServicesLocal.WalletService {
+		return walletServicesLocal.NewWalletService(walletService, cryptography)
+	})
+
+	container.Provide(func(walletService walletServicesLocal.WalletService) walletControllers.WalletController {
+		return walletControllers.NewWalletController(walletService)
+	})
 
 	newControllerErr := container.Provide(allControllers.NewControllers)
 	if newControllerErr != nil {
@@ -157,7 +170,7 @@ func BuildContainer() *dig.Container {
 	if serverErr != nil {
 		return nil
 	}
-	appErr := container.Provide(func(httpServer *http.Server, log logger.Logger, config *localConfig.Config, walletService walletServices.WalletService) server.App {
+	appErr := container.Provide(func(httpServer *http.Server, log logger.Logger, config *localConfig.Config, walletService walletServicesLocal.WalletService) server.App {
 		return server.NewApp(httpServer, log, config, walletService)
 	})
 	if appErr != nil {

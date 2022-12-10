@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/novabankapp/common.infrastructure/logger"
 	"github.com/novabankapp/wallet.api/config"
-	walletServices "github.com/novabankapp/wallet.application/services"
+	walletServicesLocal "github.com/novabankapp/wallet.api/functions/wallets/services"
 	"github.com/segmentio/kafka-go"
 	"sync"
 )
@@ -16,12 +16,12 @@ const (
 type readerMessageProcessor struct {
 	log           logger.Logger
 	cfg           *config.Config
-	walletService walletServices.WalletService
+	walletService walletServicesLocal.WalletService
 }
 
 func NewReaderMessageProcessor(log logger.Logger,
-	cfg *config.Config, service walletServices.WalletService) *readerMessageProcessor {
-	return &readerMessageProcessor{log: log, cfg: cfg}
+	cfg *config.Config, walletService walletServicesLocal.WalletService) *readerMessageProcessor {
+	return &readerMessageProcessor{log: log, cfg: cfg, walletService: walletService}
 }
 
 func (p *readerMessageProcessor) ProcessMessages(ctx context.Context, r *kafka.Reader, wg *sync.WaitGroup, workerID int) {

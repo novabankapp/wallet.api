@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/novabankapp/common.infrastructure/tracing"
+	walletResources "github.com/novabankapp/wallet.api/functions/wallets/resources"
 	"github.com/novabankapp/wallet.api/infrastructure/kafka/messages"
-	walletCommands "github.com/novabankapp/wallet.application/commands"
-	uuid "github.com/satori/go.uuid"
 	"github.com/segmentio/kafka-go"
 	"github.com/shopspring/decimal"
 )
@@ -21,11 +20,14 @@ func (s *readerMessageProcessor) processUserAccountCreated(ctx context.Context, 
 		s.commitErrMessage(ctx, r, m)
 		return
 	}
-	id := uuid.NewV4().String()
-	walletId := uuid.NewV4().String()
+
 	amount := decimal.NewFromFloat(0.00)
-	command := walletCommands.NewCreateWalletCommand(id, amount, "", msg.UserId, msg.AccountId, walletId)
-	err = s.walletService.Commands.CreateWallet.Handle(ctx, command)
+	_, err = s.walletService.CreateWallet(ctx, walletResources.CreateWalletRequest{
+		AccountId:   msg.AccountId,
+		UserId:      msg.UserId,
+		Description: "",
+		Amount:      &amount,
+	})
 	if err != nil {
 		s.commitErrMessage(ctx, r, m)
 		return
